@@ -1,4 +1,5 @@
 
+import math
 from dataclasses import dataclass, field
 
 
@@ -61,7 +62,81 @@ def make_2trip_example() -> Instance:
     )
 
 
+def load_instance(
+    path: str,
+    max_shift: float = 480.0,
+    round_distances: bool = False,
+) -> Instance:
+    """Load an MSCDP-format instance file.
+
+    File format
+    -----------
+    Line 1:  ``c <num_nodes> <max_vehicles>``
+    Lines 2..: for each node ``x  y  tw_start  tw_end``
+               The first node is the depot.
+
+    Travel times are Euclidean distances between node coordinates.
+    The depot's time-window end is used as the depot deadline.
+    """
+    with open(path) as fh:
+        lines = [ln.strip() for ln in fh if ln.strip()]
+
+    header = lines[0].split()
+    # header[0] == 'c'
+    num_nodes = int(header[1])
+    max_vehicles = int(header[2])
+
+    coords: dict[int, tuple[float, float]] = {}
+    tw_start: dict[int, float] = {}
+    tw_end: dict[int, float] = {}
+
+    node_lines = lines[1:1 + num_nodes]
+    for idx, ln in enumerate(node_lines):
+        x, y, ts, te = ln.split()
+        coords[idx] = (float(x), float(y))
+        tw_start[idx] = float(ts)
+        tw_end[idx] = float(te)
+
+    depot = 0
+    pocs = [i for i in coords if i != depot]
+
+    def dist(i: int, j: int) -> float:
+        (xi, yi), (xj, yj) = coords[i], coords[j]
+        d = math.hypot(xi - xj, yi - yj)
+        return round(d) if round_distances else d
+
+    travel_time: dict[tuple[int, int], float] = {}
+    for i in coords:
+        for j in coords:
+            travel_time[(i, j)] = dist(i, j)
+
+    release_time = {j: tw_start[j] for j in pocs}
+    due_time = {j: tw_end[j] for j in pocs}
+
+    return Instance(
+        pocs=pocs,
+        depot=depot,
+        travel_time=travel_time,
+        release_time=release_time,
+        due_time=due_time,
+        depot_deadline=tw_end[depot],
+        fleet_size=max_vehicles,
+        max_shift=max_shift,
+    )
+
+
 if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) > 1:
+        inst = load_instance(sys.argv[1])
+        print(f"Loaded: {inst}")
+        print(f"  Nodes: {inst.nodes[:6]}{'...' if inst.n > 5 else ''}")
+        print(f"  Depot deadline: {inst.depot_deadline}")
+        print(f"  c(0,1) = {inst.c(0, 1):.3f}")
+        print(f"  TW of PoC 1: [{inst.release_time[1]}, {inst.due_time[1]}]")
+        sys.exit(0)
+
     inst = make_2trip_example()
     print(inst)
     print(f"Nodes: {inst.nodes}")

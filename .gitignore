@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environment
+.venv/
+
+# Logs / solver output
+*.log
+gurobi.log
+
+# IDE
+.idea/
+
+# Results (regenerate from runs)
+data/MSCDPinstances/**/phase1_results*.csv
