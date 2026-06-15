@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -114,6 +115,96 @@ class Phase2Instance:
 
     def t(self, i: int, j: int) -> float:
         return self.travel_time[(i, j)]
+
+
+def load_phase2_solution(
+    json_path: str,
+    emergency_requests: dict[int, EmergencyRequest],
+    travel_time: dict[tuple[int, int], float],
+    penalty_tw: dict[int, float] | None = None,
+    penalty_c: dict[int, float] | None = None,
+    tau_max: float | None = None,
+) -> Phase2Instance:
+    """Build a Phase2Instance from a Phase-1 solution JSON (written by phase1_export).
+
+    This decouples the phases: Phase 1 is solved once and dumped to disk; Phase 2
+    reads the JSON without needing a live Gurobi model in memory.
+
+    Parameters
+    ----------
+    json_path : path to a phase1_solutions/<size>/<instance>.json file
+    emergency_requests : dict m -> EmergencyRequest, with A_m referencing arc ids
+        that exist in the solution file
+    travel_time : full travel-time dict including emergency nodes
+    penalty_tw, penalty_c : per-request penalty weights (default 1.0)
+    tau_max : maximum shift duration (defaults to the value stored in the JSON)
+    """
+    penalty_tw = penalty_tw or {}
+    penalty_c = penalty_c or {}
+
+    with open(json_path) as fh:
+        doc = json.load(fh)
+
+    if tau_max is None:
+        tau_max = float(doc["max_shift"])
+
+    # ---- Rebuild arcs (one Phase2Arc per arc id) ----
+    arc_by_id: dict[int, Phase2Arc] = {}
+    for t in doc["trips"]:
+        for a in t["arcs"]:
+            arc_by_id[a["id"]] = Phase2Arc(
+                id=a["id"], src=a["src"], tgt=a["tgt"],
+                trip_id=t["id"], route_id=t["route_id"],
+            )
+
+    # ---- Trips ----
+    trips: dict[int, Trip] = {}
+    for t in doc["trips"]:
+        trips[t["id"]] = Trip(
+            id=t["id"],
+            route_id=t["route_id"],
+            arcs=[arc_by_id[a["id"]] for a in t["arcs"]],
+            C0=t["C0"],
+            g=t.get("g", 0.0),
+            is_first=t["is_first"],
+            is_last=t["is_last"],
+            next_trip_id=t["next_trip_id"],
+        )
+
+    # ---- Regular requests ----
+    regular_requests: dict[int, RegularRequest] = {}
+    for r in doc["regular_requests"]:
+        j = r["id"]
+        regular_requests[j] = RegularRequest(
+            id=j,
+            trip_id=r["trip_id"],
+            z0=r["z0"],
+            d=r["d"],
+            pi_tw=penalty_tw.get(j, 1.0),
+            pi_c=penalty_c.get(j, 1.0),
+            B=[arc_by_id[aid] for aid in r["B"]],
+        )
+
+    routes = {int(k): v for k, v in doc["routes"].items()}
+    Lambda0 = {int(k): v for k, v in doc["Lambda0"].items()}
+
+    # Validate that every emergency's candidate arcs exist in this solution
+    for m, em in emergency_requests.items():
+        for arc in em.A_m:
+            if arc.id not in arc_by_id:
+                raise ValueError(
+                    f"Emergency {m} references arc id {arc.id} not present in {json_path}"
+                )
+
+    return Phase2Instance(
+        routes=routes,
+        trips=trips,
+        regular_requests=regular_requests,
+        Lambda0=Lambda0,
+        tau_max=tau_max,
+        emergency_requests=emergency_requests,
+        travel_time=travel_time,
+    )
 
 
 def extract_phase2_instance(
