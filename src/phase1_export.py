@@ -160,12 +160,27 @@ def export_instance(path: str, time_limit: float, max_shift: float, out_dir: str
 
     sol = reconstruct_solution(m)
 
+    # Human-readable Gurobi status names (subset we expect here)
+    STATUS_NAMES = {
+        GRB.OPTIMAL: "OPTIMAL",
+        GRB.TIME_LIMIT: "TIME_LIMIT",
+        GRB.INTERRUPTED: "INTERRUPTED",
+        GRB.SUBOPTIMAL: "SUBOPTIMAL",
+        GRB.INFEASIBLE: "INFEASIBLE",
+    }
+    status_name = STATUS_NAMES.get(m.Status, f"STATUS_{m.Status}")
+    try:
+        gap = m.MIPGap
+    except Exception:
+        gap = float("nan")
+
     sum_r = sum(inst.release_time[j] for j in inst.pocs)
     name = os.path.splitext(os.path.basename(path))[0]
     doc = {
         "instance": name,
-        "status": "OPTIMAL" if m.Status == GRB.OPTIMAL else str(m.Status),
-        "mip_gap": 0.0 if m.Status == GRB.OPTIMAL else m.MIPGap,
+        "status": status_name,
+        "is_optimal": bool(m.Status == GRB.OPTIMAL or gap <= 1e-4),
+        "mip_gap": gap,
         "objective": m.ObjVal,
         "F_prime": m.ObjVal - sum_r,
         "max_shift": max_shift,
@@ -184,7 +199,8 @@ def export_instance(path: str, time_limit: float, max_shift: float, out_dir: str
         json.dump(doc, fh, indent=2)
 
     print(f"{name}: obj={doc['objective']:.2f}  F'={doc['F_prime']:.2f}  "
-          f"status={doc['status']}  ->  {out_path}")
+          f"status={doc['status']}  gap={doc['mip_gap']*100:.2f}%  "
+          f"{'(optimal-quality)' if doc['is_optimal'] else ''}  ->  {out_path}")
     return doc
 
 
