@@ -6,6 +6,45 @@ Phase 1 solves the regular Collection and Delivery Problem of biomedical Specime
 
 The code is intentionally split into model construction, data generation, experiments, and reporting so that results can be reproduced and checked step by step.
 
+## Main Outcomes
+
+The current experiments show that emergency outsourcing is mostly driven by insertion feasibility, not only by outsourcing price.
+
+Key findings:
+
+- Emergency window width `W` is the strongest driver. Increasing `W` lowers the forced-outsourcing floor because more emergencies can be inserted before their hard deadline.
+- The outsourcing price multiplier `lambda` has a limited effect when many emergencies are infeasible. Even high outsourcing prices cannot force insertion if no feasible insertion arc exists.
+- The soft regular time-window penalty `pi_S` has very little effect. Regular TW violations are rare, so `tw_penalty` is close to zero in most runs.
+- Completion delay matters more than TW violation. Inserted emergencies mainly delay trip return times, so the relevant disruption is regular specimen completion delay.
+- The calibrated global emergency window from the `025` instances is approximately `W=80`, computed as `2 x p90(d_0j)`.
+- `W=90` is a more conservative setting that better covers the `RC` class.
+
+The reason split in `data/phase2_results/findings.txt` shows how much outsourcing is forced by infeasibility:
+
+```text
+W=80, lambda=5, pi_S=2:
+inserted    = 0.401
+out_infeas = 0.545
+out_econ   = 0.053
+out_total  = 0.599
+infeas/out = 0.911
+```
+
+Interpretation: at `W=80` and high outsourcing price, about `91.1%` of outsourced emergencies are outsourced because insertion is infeasible, not because outsourcing is cheaper.
+
+For `W=90`, feasibility improves:
+
+```text
+W=90, lambda=5, pi_S=2:
+inserted    = 0.454
+out_infeas = 0.483
+out_econ   = 0.063
+out_total  = 0.546
+infeas/out = 0.885
+```
+
+Interpretation: `W=90` reduces total outsourcing and forced outsourcing, but most outsourced emergencies are still infeasibility-driven.
+
 ## Project Structure
 
 ```text
