@@ -33,6 +33,14 @@ def build_model(inst: Instance, graph: ExtendedGraph) -> gp.Model:
     m._x, m._y, m._z, m._tau, m._C = x, y, z, tau, C
     m._inst, m._graph = inst, graph
 
+    # ---- Preprocessing (paper, Sec. 2): tighten release times and deadlines ----
+    #   r_j := max{r_j, c_{0,j}},  d_j := min{d_j, d_0 - c_{j,0}}
+    # These updated values are used everywhere -- in the time-window constraint (5)
+    # AND inside the big-M coefficients M_e, M_i, M'_e (4, 8, 10) -- which tightens
+    # the LP relaxation. (Using raw windows there only weakens the bound.)
+    r_hat = {j: max(inst.release_time[j], inst.c(depot, j)) for j in P}
+    d_hat = {j: min(inst.due_time[j], inst.depot_deadline - inst.c(j, depot)) for j in P}
+
     # ---- Objective: (1) minimize sum of completion times ----
     m.setObjective(gp.quicksum(C[j] for j in P), GRB.MINIMIZE)
 
@@ -58,21 +66,19 @@ def build_model(inst: Instance, graph: ExtendedGraph) -> gp.Model:
         m.addConstr(gp.quicksum(x[e] for e in in_j) == 1, name=f"flow_in_poc_{j}")
 
     # Constraint (4): time propagation along arcs
+    #   M_e := max{0, d_{s(e)} + c_e - r_{t(e)}}  (with tightened d, r)
     for e in AP + AR:
         i, j = e.src, e.tgt
-        M_e = max(0.0, inst.due_time[i] + e.cost - inst.release_time[j])
+        M_e = max(0.0, d_hat[i] + e.cost - r_hat[j])
         m.addConstr(
             z[i] + e.cost <= z[j] + M_e * (1 - x[e]),
             name=f"time_prop_{i}_{j}_{e.kind}"
         )
 
-    # Constraint (5): time windows
+    # Constraint (5): time windows  (use the tightened windows)
     for j in P:
-        r_j = max(inst.release_time[j], inst.c(depot, j))
-        d_j = min(inst.due_time[j], inst.depot_deadline - inst.c(j, depot))
-
-        m.addConstr(z[j] >= r_j, name=f"tw_lower_{j}")
-        m.addConstr(z[j] <= d_j, name=f"tw_upper_{j}")
+        m.addConstr(z[j] >= r_hat[j], name=f"tw_lower_{j}")
+        m.addConstr(z[j] <= d_hat[j], name=f"tw_upper_{j}")
 
     # Constraint (6): y_{j,j} = 1 for all j in P
 
@@ -93,7 +99,7 @@ def build_model(inst: Instance, graph: ExtendedGraph) -> gp.Model:
 
     for i in P:
         c_i_depot = inst.c(i, depot)
-        M_i = inst.due_time[i] + c_i_depot
+        M_i = d_hat[i] + c_i_depot
         for j in P:
             m.addConstr(
                 z[i] + c_i_depot <= C[j] + M_i * (1 - y[i, j]),
@@ -109,7 +115,7 @@ def build_model(inst: Instance, graph: ExtendedGraph) -> gp.Model:
 
     for e in AP + AR:
         i, j = e.src, e.tgt
-        M_prime_e = inst.due_time[j] - inst.c(depot, j)
+        M_prime_e = d_hat[j] - inst.c(depot, j)
         m.addConstr(
             tau[i] + (z[j] - z[i]) <= tau[j] + M_prime_e * (1 - x[e]),
             name=f"tau_prop_{i}_{j}_{e.kind}"

@@ -29,13 +29,18 @@ def instance_type(filename: str) -> str:
     return f"{m.group(1)}{m.group(2)}"
 
 
-def solve_one(path: str, time_limit: float, max_shift: float):
-    """Solve Phase 1 for one instance; return (F', obj, status, gap, runtime)."""
+def solve_one(path: str, time_limit: float, max_shift: float, params: dict | None = None):
+    """Solve Phase 1 for one instance; return (F', obj, status, gap, runtime).
+
+    params : optional dict of extra Gurobi parameters, e.g. {"MIPFocus": 3, "Threads": 16}.
+    """
     inst = load_instance(path, max_shift=max_shift)
     g = build_graph(inst)
     m = build_model(inst, g)
     m.setParam("OutputFlag", 0)
     m.setParam("TimeLimit", time_limit)
+    for key, val in (params or {}).items():
+        m.setParam(key, val)
     m.optimize()
 
     status = m.Status
@@ -51,7 +56,7 @@ def solve_one(path: str, time_limit: float, max_shift: float):
 
 def main():
     folder = sys.argv[1] if len(sys.argv) > 1 else \
-        "/Users/ekaterinatkachenko/PycharmProjects/THESIS/data/MSCDPinstances/025"
+        "/Users/ekaterinatkachenko/PycharmProjects/THESIS/data/MSCDPinstances/015"
     time_limit = float(sys.argv[2]) if len(sys.argv) > 2 else 120.0
     max_shift = float(sys.argv[3]) if len(sys.argv) > 3 else 480.0
     # Optional type filter, e.g. "C1" runs only C1 instances (C2/R1/.. also valid)

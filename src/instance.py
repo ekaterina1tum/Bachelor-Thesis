@@ -62,6 +62,29 @@ def make_2trip_example() -> Instance:
     )
 
 
+def load_coordinates(path: str):
+    """Read node coordinates and time windows from an MSCDP-format file.
+
+    Returns
+    -------
+    coords : dict node_idx -> (x, y)        node 0 is the depot
+    tw     : dict node_idx -> (tw_start, tw_end)
+
+    Coordinates are not stored on the Instance object, so callers that need
+    geometry (e.g. plotting, emergency-scenario generation) use this helper.
+    """
+    with open(path) as fh:
+        lines = [ln.strip() for ln in fh if ln.strip()]
+
+    num_nodes = int(lines[0].split()[1])
+    coords, tw = {}, {}
+    for idx, ln in enumerate(lines[1:1 + num_nodes]):
+        x, y, ts, te = ln.split()
+        coords[idx] = (float(x), float(y))
+        tw[idx] = (float(ts), float(te))
+    return coords, tw
+
+
 def load_instance(
     path: str,
     max_shift: float = 480.0,

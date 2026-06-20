@@ -124,11 +124,24 @@ def reconstruct_solution(model: gp.Model):
                 trip_id += 1
                 cur_arcs = []
 
-        # Fix up last/next within this route
+        # Fix up last/next within this route, and compute inter-trip idle g_T
         for i, tid in enumerate(trip_ids_in_route):
             t = trips[tid]
             t["is_last"] = (i == len(trip_ids_in_route) - 1)
             t["next_trip_id"] = trip_ids_in_route[i + 1] if not t["is_last"] else None
+            # g_T = idle slack between this trip's return and the next trip's departure:
+            #   departure(T+) = z0(first PoC of T+) - c(depot, first PoC)
+            #   g_T = max(0, departure(T+) - C0_T)
+            if t["is_last"]:
+                t["g"] = 0.0
+            else:
+                nxt = trips[t["next_trip_id"]]
+                first_poc = nxt["arcs"][0]["tgt"]
+                if first_poc in inst.pocs:
+                    departure_next = z_val[first_poc] - inst.c(depot, first_poc)
+                    t["g"] = max(0.0, departure_next - t["C0"])
+                else:
+                    t["g"] = 0.0
 
         routes[route_id] = trip_ids_in_route
         # Route shift duration = max shift-end over the PoCs this route serves
@@ -146,12 +159,19 @@ def reconstruct_solution(model: gp.Model):
     }
 
 
-def export_instance(path: str, time_limit: float, max_shift: float, out_dir: str | None):
+def export_instance(path: str, time_limit: float, max_shift: float, out_dir: str | None,
+                    params: dict | None = None):
+    """Solve one instance and export its Phase-1 solution JSON.
+
+    params : optional dict of extra Gurobi parameters, e.g. {"MIPFocus": 3, "Threads": 16}.
+    """
     inst = load_instance(path, max_shift=max_shift)
     g = build_graph(inst)
     m = build_model(inst, g)
     m.setParam("OutputFlag", 0)
     m.setParam("TimeLimit", time_limit)
+    for key, val in (params or {}).items():
+        m.setParam(key, val)
     m.optimize()
 
     if m.SolCount == 0:
