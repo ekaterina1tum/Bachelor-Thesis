@@ -45,6 +45,22 @@ infeas/out = 0.885
 
 Interpretation: `W=90` reduces total outsourcing and forced outsourcing, but most outsourced emergencies are still infeasibility-driven.
 
+Small-instance results show the same pattern. At `lambda=5` and `pi_S=2`, most outsourcing for sizes `10` and `15` is still forced by infeasibility:
+
+```text
+W=80, lambda=5, pi_S=2:
+size  inserted  out_infeas  out_econ  out_total  infeas/out
+10       0.302       0.646     0.053      0.698       0.925
+15       0.418       0.542     0.040      0.582       0.932
+
+W=90, lambda=5, pi_S=2:
+size  inserted  out_infeas  out_econ  out_total  infeas/out
+10       0.344       0.597     0.059      0.656       0.910
+15       0.465       0.486     0.049      0.535       0.909
+```
+
+Interpretation: size `15` has more feasible insertion opportunities than size `10`, so it inserts more emergencies and outsources less. However, in both small-size groups, more than `90%` of outsourced emergencies at high lambda are still outsourced because insertion is infeasible.
+
 ## Project Structure
 
 ```text
