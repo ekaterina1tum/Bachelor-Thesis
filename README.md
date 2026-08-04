@@ -93,8 +93,8 @@ Interpretation: size `15` has more feasible insertion opportunities than size `1
     |-- phase2_report.py
     |-- phase2_feasibility_report.py
     |-- phase2_plot_results.py
-    |-- plot_instance.py
-    `-- verify.py
+    |-- phase2_make_tables.py
+    `-- plot_instance.py
 ```
 
 ## Main Data Folders

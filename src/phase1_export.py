@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import os
 import sys
+import csv
+import glob
 import json
 
 import gurobipy as gp
@@ -193,16 +195,30 @@ def export_instance(path: str, time_limit: float, max_shift: float, out_dir: str
         gap = m.MIPGap
     except Exception:
         gap = float("nan")
+    try:
+        best_bound = m.ObjBound
+    except Exception:
+        best_bound = float("nan")
 
     sum_r = sum(inst.release_time[j] for j in inst.pocs)
     name = os.path.splitext(os.path.basename(path))[0]
+    # Trust the actual optimality gap, not Gurobi's status label: a big-M model
+    # can occasionally terminate with status OPTIMAL while its dual bound is
+    # numerically inconsistent (gap > tolerance). Flag that case explicitly.
+    gap_ok = (gap == gap) and gap <= 1e-4          # gap==gap filters NaN
+    status_gap_inconsistent = (m.Status == GRB.OPTIMAL) and not gap_ok
+
     doc = {
         "instance": name,
         "status": status_name,
-        "is_optimal": bool(m.Status == GRB.OPTIMAL or gap <= 1e-4),
-        "mip_gap": gap,
+        "is_optimal": bool(gap_ok),
+        "status_gap_inconsistent": bool(status_gap_inconsistent),
         "objective": m.ObjVal,
         "F_prime": m.ObjVal - sum_r,
+        "best_bound": best_bound,
+        "mip_gap": gap,
+        "runtime_s": round(m.Runtime, 2),         # wall-clock solve time (seconds)
+        "time_limit_s": time_limit,               # the limit it ran under
         "max_shift": max_shift,
         **sol,
     }
@@ -218,21 +234,100 @@ def export_instance(path: str, time_limit: float, max_shift: float, out_dir: str
     with open(out_path, "w") as fh:
         json.dump(doc, fh, indent=2)
 
+    flag = ""
+    if doc["is_optimal"]:
+        flag = "(optimal-quality)"
+    elif doc["status_gap_inconsistent"]:
+        flag = "(!) status OPTIMAL but gap>tol -- numerically unreliable bound"
     print(f"{name}: obj={doc['objective']:.2f}  F'={doc['F_prime']:.2f}  "
           f"status={doc['status']}  gap={doc['mip_gap']*100:.2f}%  "
-          f"{'(optimal-quality)' if doc['is_optimal'] else ''}  ->  {out_path}")
+          f"time={doc['runtime_s']:.1f}s  {flag}  ->  {out_path}")
     return doc
 
 
+def export_folder(folder: str, time_limit: float, max_shift: float, out_dir: str | None,
+                  params: dict | None = None):
+    """Export every *.txt instance in a folder; write a combined summary CSV."""
+    files = sorted(glob.glob(os.path.join(folder, "*.txt")))
+    if not files:
+        print(f"No .txt instances found in {folder}")
+        return
+
+    size = os.path.basename(os.path.abspath(folder.rstrip("/")))
+    print(f"Batch export: {len(files)} instances from {folder} "
+          f"(time_limit={time_limit}s, max_shift={max_shift})\n")
+
+    rows = []
+    for path in files:
+        doc = export_instance(path, time_limit, max_shift, out_dir, params=params)
+        if doc is None:
+            continue
+        rows.append({
+            "instance": doc["instance"],
+            "status": doc["status"],
+            "is_optimal": doc["is_optimal"],
+            "status_gap_inconsistent": doc["status_gap_inconsistent"],
+            "objective": round(doc["objective"], 4),
+            "F_prime": round(doc["F_prime"], 4),
+            "best_bound": round(doc["best_bound"], 4),
+            "mip_gap": round(doc["mip_gap"], 6),
+            "runtime_s": doc["runtime_s"],
+            "time_limit_s": doc["time_limit_s"],
+        })
+
+    # write the summary next to the JSON solutions
+    if out_dir is None:
+        sol_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "data", "phase1_solutions", size,
+        )
+    else:
+        sol_dir = out_dir
+    os.makedirs(sol_dir, exist_ok=True)
+    summary_path = os.path.join(sol_dir, f"summary_{size}.csv")
+    with open(summary_path, "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=[
+            "instance", "status", "is_optimal", "status_gap_inconsistent",
+            "objective", "F_prime", "best_bound", "mip_gap",
+            "runtime_s", "time_limit_s",
+        ])
+        w.writeheader()
+        w.writerows(rows)
+
+    n_opt = sum(1 for r in rows if r["is_optimal"])
+    avg_t = sum(r["runtime_s"] for r in rows) / len(rows) if rows else 0.0
+    print(f"\nSolved {len(rows)} instances: {n_opt} optimal-quality, "
+          f"avg runtime {avg_t:.1f}s")
+    print(f"Summary: {summary_path}")
+
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("usage: python phase1_export.py <instance.txt> "
-              "[time_limit_s] [max_shift] [out_dir]")
-        sys.exit(1)
+    import argparse
+    ap = argparse.ArgumentParser(
+        description="Solve Phase 1 for one instance or a folder and export JSON(s).")
+    ap.add_argument("path", help="instance .txt file OR a folder of instances")
+    ap.add_argument("time_limit", nargs="?", type=float, default=3600.0,
+                    help="Gurobi time limit in seconds (default 3600)")
+    ap.add_argument("max_shift", nargs="?", type=float, default=480.0,
+                    help="maximum shift duration (default 480)")
+    ap.add_argument("--out-dir", default=None, help="override output directory")
+    ap.add_argument("--numeric-focus", type=int, default=None, choices=[1, 2, 3],
+                    help="Gurobi NumericFocus (1-3) for numerically hard instances")
+    ap.add_argument("--mip-focus", type=int, default=None, choices=[1, 2, 3],
+                    help="Gurobi MIPFocus (1-3)")
+    ap.add_argument("--threads", type=int, default=None, help="Gurobi thread count")
+    args = ap.parse_args()
 
-    path = sys.argv[1]
-    time_limit = float(sys.argv[2]) if len(sys.argv) > 2 else 3600.0
-    max_shift = float(sys.argv[3]) if len(sys.argv) > 3 else 480.0
-    out_dir = sys.argv[4] if len(sys.argv) > 4 else None
+    params = {}
+    if args.numeric_focus is not None:
+        params["NumericFocus"] = args.numeric_focus
+    if args.mip_focus is not None:
+        params["MIPFocus"] = args.mip_focus
+    if args.threads is not None:
+        params["Threads"] = args.threads
+    params = params or None
 
-    export_instance(path, time_limit, max_shift, out_dir)
+    if os.path.isdir(args.path):
+        export_folder(args.path, args.time_limit, args.max_shift, args.out_dir, params=params)
+    else:
+        export_instance(args.path, args.time_limit, args.max_shift, args.out_dir, params=params)
