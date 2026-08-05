@@ -1,0 +1,49 @@
+{
+  "instance": "toy",
+  "status": "OPTIMAL",
+  "is_optimal": true,
+  "mip_gap": 0.0,
+  "objective": 0.0,
+  "F_prime": 0.0,
+  "max_shift": 50.0,
+  "routes": {
+    "0": [0, 1]
+  },
+  "trips": [
+    {
+      "id": 0,
+      "route_id": 0,
+      "C0": 21.0,
+      "g": 2.0,
+      "is_first": true,
+      "is_last": false,
+      "next_trip_id": 1,
+      "arcs": [
+        {"id": 0, "src": 0, "tgt": 1},
+        {"id": 1, "src": 1, "tgt": 2},
+        {"id": 2, "src": 2, "tgt": 0}
+      ]
+    },
+    {
+      "id": 1,
+      "route_id": 0,
+      "C0": 35.0,
+      "g": 0.0,
+      "is_first": false,
+      "is_last": true,
+      "next_trip_id": null,
+      "arcs": [
+        {"id": 3, "src": 0, "tgt": 3},
+        {"id": 4, "src": 3, "tgt": 0}
+      ]
+    }
+  ],
+  "regular_requests": [
+    {"id": 1, "trip_id": 0, "z0": 5.0,  "d": 15.0, "B": [0]},
+    {"id": 2, "trip_id": 0, "z0": 13.0, "d": 20.0, "B": [0, 1]},
+    {"id": 3, "trip_id": 1, "z0": 29.0, "d": 40.0, "B": [3]}
+  ],
+  "Lambda0": {
+    "0": 35.0
+  }
+}

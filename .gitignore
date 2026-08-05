@@ -15,3 +15,15 @@ gurobi.log
 
 # Results (regenerate from runs)
 data/MSCDPinstances/**/phase1_results*.csv
+
+# Emergency scenarios -- regenerable deterministically from seeds (141 MB, 35k files)
+data/emergency_scenarios/
+
+# Phase-2 per-scenario result JSONs -- huge (2.3 GB, 600k files), regenerable.
+# Keep only the aggregated summaries, figures, and findings.
+data/phase2_results/*/
+!data/phase2_results/figures/
+
+# Instance/route plots (regenerable from plot_instance.py)
+data/MSCDPinstances/**/*.png
+data/MSCDPinstances/**/plots/

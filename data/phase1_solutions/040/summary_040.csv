@@ -1,0 +1,3 @@
+instance,status,is_optimal,status_gap_inconsistent,objective,F_prime,best_bound,mip_gap,runtime_s,time_limit_s
+040_RC207,TIME_LIMIT,False,False,12072.5571,1695.5571,12005.1502,0.005583,600.03,600.0
+040_RC208,OPTIMAL,True,False,9654.5913,1644.5913,9653.8243,7.9e-05,3.32,600.0

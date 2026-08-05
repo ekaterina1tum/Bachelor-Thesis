@@ -1,0 +1,235 @@
+========================================================================
+PHASE-2 CALIBRATION FINDINGS
+  pi_C = 1 (numeraire)
+  emergency-window grid W = [60.0, 80.0, 90.0, 120.0]
+  pi_S grid = [0.5, 1.0, 2.0, 5.0, 10.0]
+  lambda grid = [0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0]
+  outsourcing f_m = lambda*(c_0m + c_m0)
+========================================================================
+
+Overall mean outsource fraction by pi_S x lambda (W=60):
+     pi_S      0.5     0.75        1      1.5        2        3        5
+      0.5    0.815    0.800    0.793    0.786    0.784    0.782    0.782
+        1    0.815    0.800    0.793    0.787    0.784    0.782    0.782
+        2    0.815    0.800    0.793    0.787    0.784    0.782    0.782
+        5    0.816    0.800    0.794    0.788    0.786    0.783    0.782
+       10    0.816    0.801    0.794    0.789    0.786    0.784    0.783
+
+Mean outsource fraction by class at lambda=1.0 (W=60):
+     pi_S        C        R       RC
+      0.5    0.899    0.714    0.766
+        1    0.899    0.715    0.766
+        2    0.899    0.715    0.766
+        5    0.899    0.716    0.767
+       10    0.899    0.717    0.767
+
+Mean objective composition per scenario at lambda=1.0 (W=60):
+     pi_S  class   outsourcing   tw_penalty   completion
+      0.5      C        115.70         0.00         1.76
+      0.5      R         94.67         0.02         9.10
+      0.5     RC        151.44         0.02         4.82
+        1      C        115.70         0.00         1.76
+        1      R         94.75         0.03         9.02
+        1     RC        151.44         0.04         4.82
+        2      C        115.70         0.00         1.76
+        2      R         94.80         0.05         8.98
+        2     RC        151.44         0.08         4.82
+        5      C        115.70         0.00         1.76
+        5      R         94.98         0.03         8.85
+        5     RC        151.65         0.07         4.70
+       10      C        115.70         0.00         1.76
+       10      R         95.07         0.02         8.80
+       10     RC        151.76         0.03         4.67
+
+Outsourcing reason split at pi_S=2 (W=60):
+   lambda  inserted  out_infeas  out_econ out_total  infeas/out
+      0.5     0.199       0.736     0.065     0.801       0.918
+     0.75     0.217       0.736     0.048     0.783       0.939
+        1     0.224       0.736     0.040     0.776       0.948
+      1.5     0.230       0.736     0.034     0.770       0.956
+        2     0.233       0.736     0.031     0.767       0.960
+        3     0.235       0.736     0.029     0.765       0.962
+        5     0.236       0.736     0.029     0.764       0.962
+
+Feasible-emergency decision split at pi_S=2 (W=60):
+  Denominator = inserted + economically outsourced emergencies only;
+  forced infeasible outsourcing is excluded from this table.
+   lambda  n_feasible   inserted   out_econ
+      0.5        3553      0.752      0.248
+     0.75        3553      0.819      0.181
+        1        3553      0.849      0.151
+      1.5        3553      0.871      0.129
+        2        3553      0.883      0.117
+        3        3553      0.890      0.110
+        5        3553      0.891      0.109
+
+Overall mean outsource fraction by pi_S x lambda (W=80):
+     pi_S      0.5     0.75        1      1.5        2        3        5
+      0.5    0.688    0.653    0.636    0.629    0.626    0.624    0.623
+        1    0.688    0.654    0.636    0.629    0.626    0.624    0.623
+        2    0.688    0.654    0.636    0.630    0.627    0.624    0.624
+        5    0.688    0.654    0.637    0.631    0.627    0.625    0.624
+       10    0.688    0.654    0.637    0.632    0.629    0.626    0.624
+
+Mean outsource fraction by class at lambda=1.0 (W=80):
+     pi_S        C        R       RC
+      0.5    0.807    0.534    0.566
+        1    0.807    0.535    0.566
+        2    0.807    0.536    0.566
+        5    0.807    0.537    0.567
+       10    0.807    0.538    0.567
+
+Mean objective composition per scenario at lambda=1.0 (W=80):
+     pi_S  class   outsourcing   tw_penalty   completion
+      0.5      C        104.19         0.00         5.26
+      0.5      R         69.78         0.05        17.91
+      0.5     RC        109.93         0.03         9.00
+        1      C        104.19         0.00         5.26
+        1      R         69.99         0.06        17.73
+        1     RC        109.93         0.04         9.01
+        2      C        104.19         0.00         5.26
+        2      R         70.10         0.07        17.65
+        2     RC        109.93         0.08         9.01
+        5      C        104.19         0.00         5.26
+        5      R         70.27         0.07        17.55
+        5     RC        110.18         0.04         8.87
+       10      C        104.19         0.00         5.26
+       10      R         70.46         0.03        17.43
+       10     RC        110.24         0.04         8.84
+
+Outsourcing reason split at pi_S=2 (W=80):
+   lambda  inserted  out_infeas  out_econ out_total  infeas/out
+      0.5     0.328       0.545     0.126     0.672       0.812
+     0.75     0.367       0.545     0.087     0.633       0.862
+        1     0.386       0.545     0.068     0.614       0.889
+      1.5     0.394       0.545     0.060     0.606       0.901
+        2     0.398       0.545     0.057     0.602       0.906
+        3     0.401       0.545     0.054     0.599       0.911
+        5     0.401       0.545     0.053     0.599       0.911
+
+Feasible-emergency decision split at pi_S=2 (W=80):
+  Denominator = inserted + economically outsourced emergencies only;
+  forced infeasible outsourcing is excluded from this table.
+   lambda  n_feasible   inserted   out_econ
+      0.5        6109      0.722      0.278
+     0.75        6109      0.808      0.192
+        1        6109      0.850      0.150
+      1.5        6109      0.868      0.132
+        2        6109      0.876      0.124
+        3        6109      0.882      0.118
+        5        6109      0.883      0.117
+
+Overall mean outsource fraction by pi_S x lambda (W=90):
+     pi_S      0.5     0.75        1      1.5        2        3        5
+      0.5    0.650    0.603    0.585    0.578    0.576    0.574    0.573
+        1    0.650    0.604    0.585    0.578    0.576    0.574    0.573
+        2    0.650    0.604    0.585    0.579    0.576    0.574    0.573
+        5    0.650    0.604    0.586    0.579    0.577    0.575    0.574
+       10    0.650    0.604    0.586    0.580    0.578    0.576    0.575
+
+Mean outsource fraction by class at lambda=1.0 (W=90):
+     pi_S        C        R       RC
+      0.5    0.769    0.480    0.505
+        1    0.769    0.481    0.505
+        2    0.769    0.481    0.505
+        5    0.769    0.482    0.506
+       10    0.769    0.483    0.506
+
+Mean objective composition per scenario at lambda=1.0 (W=90):
+     pi_S  class   outsourcing   tw_penalty   completion
+      0.5      C         98.61         0.00         6.83
+      0.5      R         61.71         0.04        20.12
+      0.5     RC         97.47         0.02        10.97
+        1      C         98.61         0.00         6.83
+        1      R         61.80         0.06        20.05
+        1     RC         97.47         0.03        10.98
+        2      C         98.61         0.00         6.83
+        2      R         61.93         0.06        19.95
+        2     RC         97.47         0.06        10.98
+        5      C         98.61         0.00         6.83
+        5      R         62.06         0.07        19.87
+        5     RC         97.67         0.04        10.85
+       10      C         98.61         0.00         6.83
+       10      R         62.21         0.04        19.79
+       10     RC         97.67         0.05        10.87
+
+Outsourcing reason split at pi_S=2 (W=90):
+   lambda  inserted  out_infeas  out_econ out_total  infeas/out
+      0.5     0.371       0.483     0.146     0.629       0.767
+     0.75     0.419       0.483     0.098     0.581       0.831
+        1     0.441       0.483     0.076     0.559       0.863
+      1.5     0.448       0.483     0.069     0.552       0.875
+        2     0.451       0.483     0.066     0.549       0.880
+        3     0.454       0.483     0.063     0.546       0.884
+        5     0.454       0.483     0.063     0.546       0.885
+
+Feasible-emergency decision split at pi_S=2 (W=90):
+  Denominator = inserted + economically outsourced emergencies only;
+  forced infeasible outsourcing is excluded from this table.
+   lambda  n_feasible   inserted   out_econ
+      0.5        6950      0.717      0.283
+     0.75        6950      0.810      0.190
+        1        6950      0.852      0.148
+      1.5        6950      0.867      0.133
+        2        6950      0.873      0.127
+        3        6950      0.878      0.122
+        5        6950      0.879      0.121
+
+Overall mean outsource fraction by pi_S x lambda (W=120):
+     pi_S      0.5     0.75        1      1.5        2        3        5
+      0.5      n/a      n/a      n/a      n/a      n/a      n/a      n/a
+        1      n/a      n/a      n/a      n/a      n/a      n/a      n/a
+        2    0.551    0.484    0.462    0.458    0.456    0.454    0.454
+        5      n/a      n/a      n/a      n/a      n/a      n/a      n/a
+       10      n/a      n/a      n/a      n/a      n/a      n/a      n/a
+
+Mean outsource fraction by class at lambda=1.0 (W=120):
+     pi_S        C        R       RC
+      0.5      n/a      n/a      n/a
+        1      n/a      n/a      n/a
+        2    0.680    0.360    0.347
+        5      n/a      n/a      n/a
+       10      n/a      n/a      n/a
+
+Mean objective composition per scenario at lambda=1.0 (W=120):
+     pi_S  class   outsourcing   tw_penalty   completion
+        2      C         84.82         0.00        10.97
+        2      R         45.14         0.05        21.19
+        2     RC         66.74         0.02        15.80
+
+Outsourcing reason split at pi_S=2 (W=120):
+   lambda  inserted  out_infeas  out_econ out_total  infeas/out
+      0.5     0.473       0.344     0.183     0.527       0.653
+     0.75     0.541       0.344     0.116     0.459       0.748
+        1     0.565       0.344     0.091     0.435       0.791
+      1.5     0.570       0.344     0.087     0.430       0.799
+        2     0.572       0.344     0.085     0.428       0.803
+        3     0.573       0.344     0.083     0.427       0.805
+        5     0.573       0.344     0.083     0.427       0.805
+
+Feasible-emergency decision split at pi_S=2 (W=120):
+  Denominator = inserted + economically outsourced emergencies only;
+  forced infeasible outsourcing is excluded from this table.
+   lambda  n_feasible   inserted   out_econ
+      0.5        8819      0.722      0.278
+     0.75        8819      0.824      0.176
+        1        8819      0.861      0.139
+      1.5        8819      0.868      0.132
+        2        8819      0.871      0.129
+        3        8819      0.873      0.127
+        5        8819      0.873      0.127
+
+Key takeaways:
+  - Across all W and pi_S values, the outsource fraction changes much more
+    with lambda and emergency-window width than with pi_S.
+  - The outsourcing reason split shows how much of outsourcing is forced by
+    infeasible insertion versus chosen economically by the objective.
+  - Conditional on insertion being feasible, most emergencies are inserted
+    once lambda reaches 1; the remaining outsourcing is the economic choice.
+  - Higher pi_S mainly changes the cost composition by increasing the
+    penalty attached to regular-request lateness; it does not overturn the
+    insertion/outsourcing pattern.
+  - C-class instances remain the most outsourcing-heavy; R-class instances
+    remain the most insertion-friendly.
+  - The main operational trade-off is still the trip-level completion delay:
+    inserted emergencies delay the return of all specimens in that trip.
